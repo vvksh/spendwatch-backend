@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,14 +8,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var db *sql.DB
+const dbPath = "./expense.db"
+
+var db *ExpenseStore
 
 func getExpenses(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World!")
 }
 
 func main() {
-	db, err := InitExpenseStore("./expense.db")
+	es, err := InitExpenseStore(dbPath)
+	go backgroundExpenseFetcher(es, 5)
 	if err != nil {
 		log.Panic(err)
 	}

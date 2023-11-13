@@ -17,7 +17,6 @@ func InitExpenseStore(dbPath string) (*ExpenseStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	// defer db.Close()
 
 	sqlStmt := `
 	create table  if not exists expenses (id integer not null primary key, credit_card text, amount real, merchant text, date text);
@@ -26,9 +25,11 @@ func InitExpenseStore(dbPath string) (*ExpenseStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%q: %s\n", err, sqlStmt)
 	}
-	return &ExpenseStore{
+	e := &ExpenseStore{
 		db: db,
-	}, nil
+	}
+	fetchRecentExpenses(e, 100)
+	return e, nil
 }
 
 func (e *ExpenseStore) GetTransactionsByCreditCard(creditCard string) ([]Transanction, error) {
@@ -46,7 +47,7 @@ func (e *ExpenseStore) GetTransactionsByCreditCard(creditCard string) ([]Transan
 	return output, nil
 }
 
-func (e *ExpenseStore) AddExpense(t Transanction) error {
+func (e *ExpenseStore) AddExpense(t *Transanction) error {
 	_, err := e.db.Exec(fmt.Sprintf("insert into expenses values(NULL,'%s', %f, '%s', '%s')", t.CreditCard, t.Amount, t.Merchant, t.Date))
 	return err
 }

@@ -13,18 +13,20 @@ func Test_ExpenseStore(t *testing.T) {
 	defer es.Close()
 	require.NoError(t, err)
 	require.NotNil(t, es)
-	ts := []Transanction{
+	ts := []*Transanction{
 		{
 			CreditCard: "Amex",
 			Amount:     28.00,
 			Merchant:   "XYZ",
 			Date:       "2020/11/07",
+			Category:   "Grocery",
 		},
 		{
 			CreditCard: "Citi",
 			Amount:     38.00,
 			Merchant:   "ABC",
 			Date:       "2021/11/07",
+			Category:   "Grocery",
 		},
 	}
 	for i := 0; i < len(ts); i++ {

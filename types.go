@@ -5,4 +5,5 @@ type Transanction struct {
 	Amount     float64
 	Merchant   string
 	Date       string
+	Category   string
 }
