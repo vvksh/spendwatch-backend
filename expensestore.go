@@ -13,7 +13,7 @@ type ExpenseStore struct {
 	db *sql.DB
 }
 
-func InitExpenseStore(dbPath string) (*ExpenseStore, error) {
+func InitExpenseStore(dbPath string, seedData bool) (*ExpenseStore, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,9 @@ func InitExpenseStore(dbPath string) (*ExpenseStore, error) {
 	e := &ExpenseStore{
 		db: db,
 	}
-	fetchRecentExpenses(e, 100)
+	if seedData {
+		fetchRecentExpenses(e, 100)
+	}
 	return e, nil
 }
 
@@ -58,8 +60,8 @@ func generateQuery(cc string, merchant string, category string, from string, to 
 	return query, nil
 }
 
-func (e *ExpenseStore) GetTransactions(cc string, merchant string, category string, from string, to string) ([]Transanction, error) {
-	output := []Transanction{}
+func (e *ExpenseStore) GetTransactions(cc string, merchant string, category string, from string, to string) ([]*Transanction, error) {
+	output := []*Transanction{}
 	queryStmt, err := generateQuery(cc, merchant, category, from, to)
 	if err != nil {
 		return output, err
@@ -72,7 +74,7 @@ func (e *ExpenseStore) GetTransactions(cc string, merchant string, category stri
 	for rows.Next() {
 		var t Transanction
 		err = rows.Scan(&t.CreditCard, &t.Amount, &t.Merchant, &t.Category, &t.Date)
-		output = append(output, t)
+		output = append(output, &t)
 	}
 	return output, nil
 }

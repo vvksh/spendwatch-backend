@@ -53,7 +53,7 @@ func Test_generateQuery(t *testing.T) {
 }
 func Test_ExpenseStore(t *testing.T) {
 	f, err := os.CreateTemp("", "test_es.db")
-	es, err := InitExpenseStore(f.Name())
+	es, err := InitExpenseStore(f.Name(), false)
 	defer es.Close()
 	require.NoError(t, err)
 	require.NotNil(t, es)

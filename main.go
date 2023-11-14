@@ -37,7 +37,7 @@ func getExpenses(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var err error
-	es, err = InitExpenseStore(dbPath)
+	es, err = InitExpenseStore(dbPath, true)
 	go backgroundExpenseFetcher(es, 5)
 	if err != nil {
 		log.Panic(err)
