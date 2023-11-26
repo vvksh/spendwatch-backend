@@ -7,3 +7,13 @@ type Transanction struct {
 	Date       string  `json:"date"`
 	Category   string  `json:"category"`
 }
+
+type MonthlySum struct {
+	Month string `json:"month"`
+	Sum   string `json:"sum"`
+}
+
+type CreditCardSum struct {
+	CreditCard string `json:"credit_card"`
+	Sum        string `json:"sum"`
+}

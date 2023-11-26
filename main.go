@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
-
-const dbPath = "./expense.db"
 
 var es *ExpenseStore
 
@@ -17,19 +16,52 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-func getExpenses(w http.ResponseWriter, r *http.Request) {
-	cc := r.URL.Query().Get("cc")
-	category := r.URL.Query().Get("category")
-	merchant := r.URL.Query().Get("merchant")
-	from := r.URL.Query().Get("from")
-	to := r.URL.Query().Get("to")
-	ts, err := es.GetTransactions(cc, merchant, category, from, to)
+func main() {
+	var err error
+	connectionString := os.Getenv("MYSQL_STRING")
+	if connectionString == "" {
+		log.Fatal("no connection string declared in env")
+	}
+	fmt.Println("found connection string", connectionString)
+
+	es, err := InitExpenseStore(connectionString)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Panic(err)
+	}
+	defer es.Close()
+
+	fmt.Printf("Listing on 8000")
+	m := mux.NewRouter()
+	m.HandleFunc("/expenses", getExpensesSummary).Methods(http.MethodGet)
+	http.ListenAndServe(":8000", m)
+}
+
+func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
+	groupBy := r.URL.Query().Get("groupBy")
+	var out any
+	var err error
+	var httpErrorType int
+	if groupBy == "" {
+		err = fmt.Errorf("Invalid groupby %s", groupBy)
+		httpErrorType = http.StatusBadRequest
+	} else if groupBy == "month" {
+		out, err = es.GetMonthlyExpensesSummary()
+		httpErrorType = http.StatusInternalServerError
+	} else if groupBy == "credit_card" {
+		out, err = es.GetCreditCardExpensesSummary()
+		httpErrorType = http.StatusInternalServerError
+	} else {
+		err = fmt.Errorf("Invalid groupby %s", groupBy)
+		httpErrorType = http.StatusBadRequest
+	}
+
+	if err != nil {
+		w.WriteHeader(httpErrorType)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	jsonOut, err := json.Marshal(ts)
+
+	jsonOut, err := json.Marshal(out)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -38,19 +70,5 @@ func getExpenses(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonOut)
-}
 
-func main() {
-	var err error
-	es, err = InitExpenseStore(dbPath, true)
-	go backgroundExpenseFetcher(es, 5)
-	if err != nil {
-		log.Panic(err)
-	}
-	defer es.Close()
-
-	fmt.Printf("Listing on 8000")
-	m := mux.NewRouter()
-	m.HandleFunc("/expenses", getExpenses).Methods(http.MethodGet)
-	http.ListenAndServe(":8000", m)
 }
