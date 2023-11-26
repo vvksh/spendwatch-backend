@@ -13,6 +13,10 @@ const dbPath = "./expense.db"
 
 var es *ExpenseStore
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func getExpenses(w http.ResponseWriter, r *http.Request) {
 	cc := r.URL.Query().Get("cc")
 	category := r.URL.Query().Get("category")
@@ -31,6 +35,7 @@ func getExpenses(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	enableCors(&w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonOut)
 }
