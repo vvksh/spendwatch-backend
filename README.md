@@ -9,3 +9,17 @@ background thread to update the DB with latest expenses
 go build -o main *.go
 ./main
 ```
+
+## Build docker
+```
+docker build -t vvksh/spendwatch-docker .
+```
+
+## Push
+
+docker push vvksh/spendwatch-docker:latest
+
+## To launch it using docker
+ docker run -d -p 8000:8000 vvksh/spendwatch-docker:latest
+
+## Test endpoint on localhost\
