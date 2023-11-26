@@ -22,4 +22,5 @@ docker push vvksh/spendwatch-docker:latest
 ## To launch it using docker
  docker run -d -p 8000:8000 vvksh/spendwatch-docker:latest
 
-## Test endpoint on localhost\
+## Test endpoint on localhost
+curl -X GET "localhost:{PORT}/expenses?groupBy=month"

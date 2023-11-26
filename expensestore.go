@@ -3,7 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
 )
 
 // Interacts with database
@@ -12,9 +13,12 @@ type ExpenseStore struct {
 }
 
 func InitExpenseStore(dbPath string) (*ExpenseStore, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("mysql", dbPath)
 	if err != nil {
 		return nil, err
+	}
+	if db == nil {
+		return nil, fmt.Errorf("no db instantiated")
 	}
 	e := &ExpenseStore{
 		db: db,
@@ -28,8 +32,8 @@ func (e *ExpenseStore) AddExpense(t *Transanction) error {
 	return err
 }
 
-func (e *ExpenseStore) GetMonthlyExpensesSummary() ([]*MonthlySum, error) {
-	output := []*MonthlySum{}
+func (e *ExpenseStore) GetMonthlyExpensesSummary() (map[string]string, error) {
+	output := map[string]string{}
 	// get last 3 months of data
 	queryStmt := "select MONTHNAME(date) as month, sum(amount) as sum from expenses where date >= CURDATE()- INTERVAL 3 MONTH group by MONTHNAME(date);"
 
@@ -39,15 +43,15 @@ func (e *ExpenseStore) GetMonthlyExpensesSummary() ([]*MonthlySum, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var m MonthlySum
-		err = rows.Scan(&m.Month, &m.Sum)
-		output = append(output, &m)
+		var month, sum string
+		err = rows.Scan(&month, &sum)
+		output[month] = sum
 	}
 	return output, nil
 }
 
-func (e *ExpenseStore) GetCreditCardExpensesSummary() ([]*CreditCardSum, error) {
-	output := []*CreditCardSum{}
+func (e *ExpenseStore) GetCreditCardExpensesSummary() (map[string]string, error) {
+	output := map[string]string{}
 	// get last 3 months of data
 	queryStmt := "select credit_card, sum(amount) from expenses as sum where date >= CURDATE()- INTERVAL 3 MONTH group by credit_card;"
 
@@ -57,13 +61,15 @@ func (e *ExpenseStore) GetCreditCardExpensesSummary() ([]*CreditCardSum, error) 
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var m CreditCardSum
-		err = rows.Scan(&m.CreditCard, &m.Sum)
-		output = append(output, &m)
+		var credit_card, sum string
+		err = rows.Scan(&credit_card, &sum)
+		output[credit_card] = sum
+
 	}
 	return output, nil
 }
 
 func (e *ExpenseStore) Close() {
+	log.Printf("Closing db \n")
 	e.db.Close()
 }

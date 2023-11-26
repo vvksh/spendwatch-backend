@@ -23,17 +23,22 @@ func main() {
 		log.Fatal("no connection string declared in env")
 	}
 	fmt.Println("found connection string", connectionString)
-
-	es, err := InitExpenseStore(connectionString)
+	port := os.Getenv("PORT")
+	if connectionString == "" {
+		log.Fatal("no port in env")
+	}
+	fmt.Println("found port", port)
+	addr := fmt.Sprintf(":%s", port)
+	es, err = InitExpenseStore(connectionString)
 	if err != nil {
 		log.Panic(err)
 	}
 	defer es.Close()
 
-	fmt.Printf("Listing on 8000")
+	fmt.Printf("Listing on %s", port)
 	m := mux.NewRouter()
 	m.HandleFunc("/expenses", getExpensesSummary).Methods(http.MethodGet)
-	http.ListenAndServe(":8000", m)
+	http.ListenAndServe(addr, m)
 }
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +47,7 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var httpErrorType int
 	if groupBy == "" {
-		err = fmt.Errorf("Invalid groupby %s", groupBy)
+		err = fmt.Errorf("No groupBy parameter passed")
 		httpErrorType = http.StatusBadRequest
 	} else if groupBy == "month" {
 		out, err = es.GetMonthlyExpensesSummary()
