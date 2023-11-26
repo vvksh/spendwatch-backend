@@ -42,6 +42,7 @@ func main() {
 }
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Handling request: %#v \n", r)
 	groupBy := r.URL.Query().Get("groupBy")
 	var out any
 	var err error
