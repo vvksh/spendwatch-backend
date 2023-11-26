@@ -37,7 +37,7 @@ func main() {
 
 	fmt.Printf("Listing on %s", port)
 	m := mux.NewRouter()
-	m.HandleFunc("/expenses", getExpensesSummary).Methods(http.MethodGet)
+	m.HandleFunc("/expenses", rateLimiter(getExpensesSummary)).Methods(http.MethodGet)
 	http.ListenAndServe(addr, m)
 }
 
