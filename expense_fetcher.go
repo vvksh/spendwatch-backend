@@ -12,7 +12,7 @@ func fetchRecentExpenses(es *ExpenseStore, limit int) error {
 	merchants := []string{"ABC", "XYZ", "PQR", "BOK", "PLOP"}
 	amounts := []float64{28.00, 76.00, 87.65, 900.98, 345.78, 654.76}
 	categories := []string{"Restaurant", "groceries", "fitness"}
-	dates := []string{"2020/11/08", "2020/11/09", "2023/11/10", "2020/11/11", "2023/11/12", "2020/11/13"}
+	dates := []string{"2023/11/08", "2023/11/09", "2023/11/10", "2023/11/11", "2023/11/12", "2023/11/13", "2023/11/08", "2023/11/09", "2023/11/10", "2023/11/11", "2023/11/12", "2023/11/13"}
 	count := 0
 
 	for _, cc := range ccs {
