@@ -7,7 +7,7 @@ background thread to update the DB with latest expenses
 ## To build and run
 ```
 go build -o main *.go
-./main
+PORT=8000 MYSQL_STRING="<MYSQL_STR>" PASSWORD="<pwd>"  ./main
 ```
 
 ## Build docker

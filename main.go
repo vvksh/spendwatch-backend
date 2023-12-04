@@ -11,6 +11,7 @@ import (
 )
 
 var es *ExpenseStore
+var password string
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -18,6 +19,10 @@ func enableCors(w *http.ResponseWriter) {
 
 func main() {
 	var err error
+	password = os.Getenv("PASSWORD")
+	if password == "" {
+		log.Fatal("no connection string declared in env")
+	}
 	connectionString := os.Getenv("MYSQL_STRING")
 	if connectionString == "" {
 		log.Fatal("no connection string declared in env")
@@ -43,6 +48,13 @@ func main() {
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling request: %#v \n", r)
+	providedPassword := r.URL.Query().Get("pwd")
+	if providedPassword != password {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Password incorrect"))
+		return
+
+	}
 	groupBy := r.URL.Query().Get("groupBy")
 	var out any
 	var err error
