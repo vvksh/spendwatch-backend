@@ -70,6 +70,9 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 	} else if groupBy == "credit_card" {
 		out, err = es.GetCreditCardExpensesSummary()
 		httpErrorType = http.StatusInternalServerError
+	} else if groupBy == "category" {
+		out, err = es.GetCategoryExpensesSummary()
+		httpErrorType = http.StatusInternalServerError
 	} else {
 		err = fmt.Errorf("Invalid groupby %s", groupBy)
 		httpErrorType = http.StatusBadRequest

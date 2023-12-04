@@ -50,6 +50,24 @@ func (e *ExpenseStore) GetMonthlyExpensesSummary() (map[string]string, error) {
 	return output, nil
 }
 
+func (e *ExpenseStore) GetCategoryExpensesSummary() (map[string]string, error) {
+	output := map[string]string{}
+	// get last 3 months of data
+	queryStmt := "select category, sum(amount) as sum from expenses where date >= CURDATE()- INTERVAL 3 MONTH group by category;"
+
+	rows, err := e.db.Query(queryStmt)
+	if err != nil {
+		return output, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var month, sum string
+		err = rows.Scan(&month, &sum)
+		output[month] = sum
+	}
+	return output, nil
+}
+
 func (e *ExpenseStore) GetCreditCardExpensesSummary() (map[string]string, error) {
 	output := map[string]string{}
 	// get last 3 months of data
