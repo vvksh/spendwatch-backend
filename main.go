@@ -47,16 +47,17 @@ func main() {
 }
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Handling request: %#v \n", r)
+	log.Printf("Handling request wirh query: %s \n", r.URL.RawQuery)
 	enableCors(&w)
 	providedPassword := r.URL.Query().Get("pwd")
+	groupBy := r.URL.Query().Get("groupBy")
+
 	if providedPassword != password {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Password incorrect"))
 		return
-
 	}
-	groupBy := r.URL.Query().Get("groupBy")
+
 	var out any
 	var err error
 	var httpErrorType int
@@ -75,6 +76,7 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(httpErrorType)
 		w.Write([]byte(err.Error()))
 		return
@@ -82,11 +84,11 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 
 	jsonOut, err := json.Marshal(out)
 	if err != nil {
+		log.Printf(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonOut)
-
 }
