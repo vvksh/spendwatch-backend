@@ -48,6 +48,7 @@ func main() {
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling request: %#v \n", r)
+	enableCors(&w)
 	providedPassword := r.URL.Query().Get("pwd")
 	if providedPassword != password {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -85,7 +86,6 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	enableCors(&w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonOut)
 
