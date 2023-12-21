@@ -13,7 +13,7 @@ import (
 
 var es *ExpenseStore
 var password string
-var logger zap.SugaredLogger
+var logger *zap.SugaredLogger
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -21,13 +21,13 @@ func enableCors(w *http.ResponseWriter) {
 
 func main() {
 	var err error
-	logger := NewLogger()
+	logger = NewLogger()
 	if err != nil {
 		log.Fatal(err)
 	}
 	password = os.Getenv("PASSWORD")
 	if password == "" {
-		log.Fatal("no connection string declared in env")
+		log.Fatal("no password string declared in env")
 	}
 	connectionString := os.Getenv("MYSQL_STRING")
 	if connectionString == "" {
@@ -110,10 +110,12 @@ func NewLogger() *zap.SugaredLogger {
 	}
 	cfg.OutputPaths = []string{
 		LOG_FILE,
+		"stdout",
 	}
-	l, err := cfg.Build()
-	if err != nil {
-		log.Fatal(err)
+	cfg.ErrorOutputPaths = []string{
+		LOG_FILE,
+		"stderr",
 	}
-	return l.Sugar()
+	logger := zap.Must(cfg.Build())
+	return logger.Sugar()
 }
