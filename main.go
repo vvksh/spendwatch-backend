@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	"os"
@@ -116,6 +117,9 @@ func NewLogger() *zap.SugaredLogger {
 		LOG_FILE,
 		"stderr",
 	}
+	cfgEncoder := zap.NewProductionEncoderConfig()
+	cfgEncoder.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg.EncoderConfig = cfgEncoder
 	logger := zap.Must(cfg.Build())
 	return logger.Sugar()
 }
