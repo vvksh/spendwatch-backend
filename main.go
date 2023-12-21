@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 var es *ExpenseStore
 var password string
+var logger zap.SugaredLogger
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -19,6 +21,10 @@ func enableCors(w *http.ResponseWriter) {
 
 func main() {
 	var err error
+	logger := NewLogger()
+	if err != nil {
+		log.Fatal(err)
+	}
 	password = os.Getenv("PASSWORD")
 	if password == "" {
 		log.Fatal("no connection string declared in env")
@@ -27,12 +33,12 @@ func main() {
 	if connectionString == "" {
 		log.Fatal("no connection string declared in env")
 	}
-	fmt.Println("found connection string", connectionString)
+	fmt.Println("found connection string: %s", connectionString)
 	port := os.Getenv("PORT")
 	if connectionString == "" {
 		log.Fatal("no port in env")
 	}
-	fmt.Println("found port", port)
+	logger.Infof("found port", port)
 	addr := fmt.Sprintf(":%s", port)
 	es, err = InitExpenseStore(connectionString)
 	if err != nil {
@@ -40,14 +46,14 @@ func main() {
 	}
 	defer es.Close()
 
-	fmt.Printf("Listing on %s", port)
+	logger.Infof("Listing on %s", port)
 	m := mux.NewRouter()
 	m.HandleFunc("/expenses", rateLimiter(getExpensesSummary)).Methods(http.MethodGet)
 	http.ListenAndServe(addr, m)
 }
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Handling request wirh query: %s \n", r.URL.RawQuery)
+	logger.Infof("Handling request wirh query: %s \n", r.URL.RawQuery)
 	enableCors(&w)
 	providedPassword := r.URL.Query().Get("pwd")
 	groupBy := r.URL.Query().Get("groupBy")
@@ -94,4 +100,16 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonOut)
+}
+
+func NewLogger() *zap.SugaredLogger {
+	cfg := zap.NewProductionConfig()
+	cfg.OutputPaths = []string{
+		"/var/log/spendwatch_backend.log",
+	}
+	l, err := cfg.Build()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return l.Sugar()
 }
