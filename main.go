@@ -104,8 +104,12 @@ func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
 
 func NewLogger() *zap.SugaredLogger {
 	cfg := zap.NewProductionConfig()
+	LOG_FILE := os.Getenv("LOG_FILE")
+	if LOG_FILE == "" {
+		LOG_FILE = "/var/log/app/spendwatch_backend.log"
+	}
 	cfg.OutputPaths = []string{
-		"/var/log/spendwatch_backend.log",
+		LOG_FILE,
 	}
 	l, err := cfg.Build()
 	if err != nil {
