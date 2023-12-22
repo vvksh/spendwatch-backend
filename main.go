@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/getsentry/sentry-go"
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/gorilla/mux"
+	"time"
 )
 
 var es *ExpenseStore
@@ -22,6 +23,19 @@ func enableCors(w *http.ResponseWriter) {
 
 func main() {
 	var err error
+	err = sentry.Init(sentry.ClientOptions{
+		Dsn: os.Getenv("SENTRY_DSN"),
+		// Set TracesSampleRate to 1.0 to capture 100%
+		// of transactions for performance monitoring.
+		// We recommend adjusting this value in production,
+		TracesSampleRate: 1.0,
+	})
+	// Flush buffered events before the program terminates.
+	defer sentry.Flush(2 * time.Second)
+
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
 	logger = NewLogger()
 	if err != nil {
 		log.Fatal(err)
@@ -34,7 +48,7 @@ func main() {
 	if connectionString == "" {
 		log.Fatal("no connection string declared in env")
 	}
-	fmt.Println("found connection string: %s", connectionString)
+	log.Println("found connection string: %s", connectionString)
 	port := os.Getenv("PORT")
 	if connectionString == "" {
 		log.Fatal("no port in env")
@@ -51,6 +65,7 @@ func main() {
 	m := mux.NewRouter()
 	m.HandleFunc("/expenses", rateLimiter(getExpensesSummary)).Methods(http.MethodGet)
 	http.ListenAndServe(addr, m)
+
 }
 
 func getExpensesSummary(w http.ResponseWriter, r *http.Request) {
